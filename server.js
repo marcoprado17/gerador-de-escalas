@@ -4,10 +4,6 @@ const path = require("path")
 
 const app = express();
 
-// Create link to Angular build directory
-var distDir = __dirname + "/dist/";
-app.use(express.static(distDir));
-
 app.get("/", (req, res) => {
     res.sendFile(path.join(distDir, "index.html"))
 });
