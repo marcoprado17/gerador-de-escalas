@@ -4,13 +4,16 @@
     position: relative;
     text-align: center;
     color: white;
+    height: 1280px;
+    width: 100%;
+    background-image: url("/assets/background.jpg");
+    padding-top: 90px;
 }
 
 .title {
-    position: absolute;
-    top: 15%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    width: 500px;
+    margin-left: auto;
+    margin-right: auto; 
     font-family: 'Satisfy', cursive;
     font-size: 32px;
     border: solid 2px white;
@@ -19,16 +22,47 @@
 }
 
 mat-card {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    margin-top: 60px;
+    margin-left: auto;
+    margin-right: auto; 
     max-width: 400px;
     background:rgba(255, 255, 255, 0.96);
 }
 
 mat-form-field {
     width: 100%;
+}
+
+@media screen and (max-width: 1280px) {
+    .title {
+        max-width: 400px;
+        font-size: 24px;
+    }
+    
+    mat-card {
+        max-width: 380px;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .title {
+        max-width: 290px;
+    }
+    
+    mat-card {
+        max-width: 280px;
+    }
+}
+
+
+@media screen and (max-width: 380px) {
+    .title {
+        max-width: 230px;
+    }
+    
+    mat-card {
+        max-width: 260px;
+    }
 }
 
 img {
