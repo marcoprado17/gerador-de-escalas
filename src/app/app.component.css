@@ -45,11 +45,16 @@ mat-form-field {
 }
 
 @media screen and (max-width: 500px) {
+    .container {
+        padding-top: 40px;
+    }
+
     .title {
         max-width: 290px;
     }
     
     mat-card {
+        margin-top: 40px;
         max-width: 280px;
     }
 }
