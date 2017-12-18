@@ -8,6 +8,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { DataService } from './data.service';
+import { FormsModule }   from '@angular/forms';
+
 
 @NgModule({
   declarations: [
@@ -21,7 +23,8 @@ import { DataService } from './data.service';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule
+    MatSelectModule,
+    FormsModule
   ],
   providers: [DataService],
   bootstrap: [AppComponent]

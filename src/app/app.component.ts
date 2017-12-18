@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import {Data} from './data';
 
 @Component({
   selector: 'app-root',
@@ -12,8 +13,9 @@ export class AppComponent {
     
   }
 
-  getCurrentMonth(){
-    var date = new Date();
-    return date.getFullYear()+"-"+(date.getMonth()+1);
+  data = new Data();
+
+  onSubmit(){
+    console.log("submit!");
   }
 }
