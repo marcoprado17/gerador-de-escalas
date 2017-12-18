@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { Data } from './data';
-import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -9,14 +8,17 @@ import { HttpClient } from '@angular/common/http';
 })
 export class AppComponent {
   title = 'app';
-
-  constructor(private http: HttpClient) {
-
-  }
-
   data = new Data();
 
+  constructor() { }
+
   onSubmit() {
-    // TODO: Download file
+    console.log("submit!");
+    window.location.href="/generate?"+
+    "designation="+this.data.designation+"&"+
+    "nIndividuals="+this.data.nIndividuals+"&"+
+    "month="+this.data.month+"&"+
+    "nAttendanceDuringWeek="+this.data.nAttendanceDuringWeek+"&"+
+    "nAttendanceOnWeekends="+this.data.nAttendanceOnWeekends;
   }
 }

@@ -7,6 +7,24 @@ app.use(express.static(__dirname + "/dist"));
 app.listen(process.env.PORT || 8080);
 
 app.get("/generate", function (req, res) {
+    console.log(req.query);
+
+    var designation = req.query.designation;
+    var nIndividuals = parseInt(req.query.nIndividuals);
+    var year = parseInt(req.query.month.substring(0, 4));
+    var month = parseInt(req.query.month.substring(5, 7));
+    var nAttendanceDuringWeek = parseInt(req.query.nAttendanceDuringWeek);
+    var nAttendanceOnWeekends = parseInt(req.query.nAttendanceOnWeekends);
+
+    console.log(designation);
+    console.log(nIndividuals);
+    console.log(year);
+    console.log(month);
+    console.log(nAttendanceDuringWeek);
+    console.log(nAttendanceOnWeekends);
+
+    // TODO: Implement algorithm
+
     // Create a new instance of a Workbook class
     var wb = new xl.Workbook();
 

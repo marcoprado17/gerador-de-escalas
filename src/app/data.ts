@@ -5,7 +5,5 @@ export class Data {
         public month: Date = null,
         public nAttendanceDuringWeek: number = null,
         public nAttendanceOnWeekends: number = null
-    ){ 
-        
-    }
+    ){}
 }
