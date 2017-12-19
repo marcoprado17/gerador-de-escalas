@@ -13,7 +13,6 @@ export class AppComponent {
   constructor() { }
 
   onSubmit() {
-    console.log("submit!");
     window.location.href="/generate?"+
     "designation="+this.data.designation+"&"+
     "nIndividuals="+this.data.nIndividuals+"&"+

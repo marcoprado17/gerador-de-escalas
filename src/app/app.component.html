@@ -20,11 +20,6 @@
           <input matInput placeholder="Cota mensal em finais de semana" type="number" required [(ngModel)]="data.nAttendanceOnWeekends"
             name="nAttendanceOnWeekends">
         </mat-form-field>
-        {{data.designation}}
-        <br> {{data.nIndividuals}}
-        <br> {{data.month}}
-        <br> {{data.nAttendanceDuringWeek}}
-        <br> {{data.nAttendanceOnWeekends}}
       </mat-card-content>
       <mat-card-actions>
         <button mat-button type="submit" [disabled]="!dataForm.form.valid">GERAR</button>

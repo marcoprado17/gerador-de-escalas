@@ -19,21 +19,12 @@ app.use(express.static(__dirname + "/dist"));
 app.listen(process.env.PORT || 8080);
 
 app.get("/generate", function (req, res) {
-    console.log(req.query);
-
     var designation = req.query.designation;
     var nIndividuals = parseInt(req.query.nIndividuals);
     var year = parseInt(req.query.month.substring(0, 4));
     var month = parseInt(req.query.month.substring(5, 7));
     var nAttendanceDuringWeek = parseInt(req.query.nAttendanceDuringWeek);
     var nAttendanceOnWeekends = parseInt(req.query.nAttendanceOnWeekends);
-
-    console.log(designation);
-    console.log(nIndividuals);
-    console.log(year);
-    console.log(month);
-    console.log(nAttendanceDuringWeek);
-    console.log(nAttendanceOnWeekends);
 
     // Create a new instance of a Workbook class
     var wb = new xl.Workbook();
@@ -45,14 +36,10 @@ app.get("/generate", function (req, res) {
     ws.cell(1, 2).string("Dias em que foi escalado");
     ws.cell(1, 3).string("Informações adicionais");
 
-    console.log("A");
 
     for (i = 0; i < nIndividuals; i++) {
-        console.log("i = " + i);
         ws.cell(2 + i, 1).string(designation + " " + minDigits(i + 1, 3));
     }
-
-    console.log("B");
 
     var nDaysInMonth = getDaysInMonth(month, year);
 
@@ -64,19 +51,13 @@ app.get("/generate", function (req, res) {
 
     for (i = 0; i < nDaysInMonth; i++) {
         var date = new Date(year, month - 1, 1 + i);
-        console.log("date = " + date);
         if (date.getDay() == 0 || date.getDay() == 6) {
             nWeekends++;
-            console.log("weekend");
         }
         else {
             nNormalDays++;
-            console.log("normal day");
         }
     }
-
-    console.log("nWeekends = " + nWeekends);
-    console.log("nNormalDays = " + nNormalDays);
 
     duringWeekAttendance = []
     weekendAttendance = []
@@ -115,13 +96,7 @@ app.get("/generate", function (req, res) {
         if (daysInMonth[i].isWeekend) {
             var nIndividualsInDay = Math.ceil(nScalesRemainingWeekendDays / nWeekendDaysRemaining);
 
-            console.log("weekeend!");
-            console.log("nScalesRemainingWeekendDays: " + nScalesRemainingWeekendDays);
-            console.log("nWeekendDaysRemaining: " + nWeekendDaysRemaining);
-            console.log("nIndividualsInDay: " + nIndividualsInDay);
-
             weekendAttendance.sort(compare);
-            console.log(weekendAttendance);
 
             for(j = 0; j < nIndividualsInDay && j < nIndividuals; j++){
                 daysInMonth[i].individuals.push(weekendAttendance[j].individual);
@@ -136,13 +111,7 @@ app.get("/generate", function (req, res) {
         else {
             var nIndividualsInDay = Math.ceil(nScalesRemainingOnWeekDays / nOnWeekDaysRemaining);
 
-            console.log("normal day!");
-            console.log("nScalesRemainingOnWeekDays: " + nScalesRemainingOnWeekDays);
-            console.log("nOnWeekDaysRemaining: " + nOnWeekDaysRemaining);
-            console.log("nIndividualsInDay: " + nIndividualsInDay);
-
             duringWeekAttendance.sort(compare);
-            console.log(duringWeekAttendance);
 
             for(j = 0; j < nIndividualsInDay && j < nIndividuals; j++){
                 daysInMonth[i].individuals.push(duringWeekAttendance[j].individual);
@@ -154,7 +123,6 @@ app.get("/generate", function (req, res) {
             nOnWeekDaysRemaining--;
             nScalesRemainingOnWeekDays -= nIndividualsInDay;
         }
-        // console.log(daysInMonth);
     }
 
     daysInMonth.sort(compareByDayAsc);
@@ -163,11 +131,7 @@ app.get("/generate", function (req, res) {
         var date = new Date(year, month - 1, 1 + i);
         ws.cell(4 + nIndividuals + i, 1).string(minDigits(i+1,2) + "/" + minDigits(month, 2) + " (" + getWeekDayName(date) + ")");
         var scale = "";
-        console.log("antes do sort:");
-        console.log(daysInMonth[i].individuals);
         daysInMonth[i].individuals.sort(normalNumberCompare);
-        console.log("depois do sort:");
-        console.log(daysInMonth[i].individuals);
         for(j = 0; j < daysInMonth[i].individuals.length; j++){
             scale += designation + " " + minDigits(daysInMonth[i].individuals[j], 3) + ", ";
         }
@@ -276,8 +240,5 @@ function getWeekDayName(date) {
 function getDaysInMonth(month, year) {
     var date = new Date(year, month, 0);
     var nDaysInMonth = date.getDate();
-    console.log("daysInMonth call");
-    console.log("date = " + date);
-    console.log("nDaysInMonth = " + nDaysInMonth);
     return nDaysInMonth;
 }
