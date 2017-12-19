@@ -1,7 +1,19 @@
 const express = require("express");
 const app = express();
+const name = "escala.xlsx";
 
 var xl = require('excel4node');
+var fs = require('fs');
+
+const weekDayNames = [
+    "domingo",
+    "segunda-feira",
+    "terça-feira",
+    "quarta-feira",
+    "quinta-feira",
+    "sexta-feira",
+    "sábado"
+]
 
 app.use(express.static(__dirname + "/dist"));
 app.listen(process.env.PORT || 8080);
@@ -23,40 +35,211 @@ app.get("/generate", function (req, res) {
     console.log(nAttendanceDuringWeek);
     console.log(nAttendanceOnWeekends);
 
-    // TODO: Implement algorithm
-
     // Create a new instance of a Workbook class
     var wb = new xl.Workbook();
 
     // Add Worksheets to the workbook
-    var ws = wb.addWorksheet('Sheet 1');
-    var ws2 = wb.addWorksheet('Sheet 2');
+    var ws = wb.addWorksheet('Escala Mensal');
 
-    // Create a reusable style
-    var style = wb.createStyle({
-        font: {
-            color: '#FF0800',
-            size: 12
-        },
-        numberFormat: '$#,##0.00; ($#,##0.00); -'
-    });
+    ws.cell(1, 1).string("Designação do indivíduo");
+    ws.cell(1, 2).string("Dias em que foi escalado");
+    ws.cell(1, 3).string("Informações adicionais");
 
-    // Set value of cell A1 to 100 as a number type styled with paramaters of style
-    ws.cell(1, 1).number(100).style(style);
+    for (i = 0; i < nIndividuals; i++) {
+        ws.cell(2 + i, 1).string(designation + " " + (i + 1));
+    }
 
-    // Set value of cell B1 to 300 as a number type styled with paramaters of style
-    ws.cell(1, 2).number(200).style(style);
+    var nDaysInMonth = getDaysInMonth(month, year);
 
-    // Set value of cell C1 to a formula styled with paramaters of style
-    ws.cell(1, 3).formula('A1 + B1').style(style);
+    ws.cell(3 + nIndividuals, 1).string("Dia do mês");
+    ws.cell(3 + nIndividuals, 2).string("Quem foi escalado");
 
-    // Set value of cell A2 to 'string' styled with paramaters of style
-    ws.cell(2, 1).string('string').style(style);
+    var nNormalDays = 0;
+    var nWeekends = 0;
 
-    // Set value of cell A3 to true as a boolean type styled with paramaters of style but with an adjustment to the font size.
-    ws.cell(3, 1).bool(true).style(style).style({ font: { size: 14 } });
+    for (i = 0; i < nDaysInMonth; i++) {
+        var date = new Date(year, month - 1, 1 + i);
+        console.log("date = " + date);
+        if (date.getDay() == 0 || date.getDay() == 6) {
+            nWeekends++;
+            console.log("weekend");
+        }
+        else {
+            nNormalDays++;
+            console.log("normal day");
+        }
+    }
 
-    wb.write("excel.xlsx");
+    console.log("nWeekends = " + nWeekends);
+    console.log("nNormalDays = " + nNormalDays);
 
-    res.download("./excel.xlsx");
+    duringWeekAttendance = []
+    weekendAttendance = []
+
+    for (i = 1; i <= nIndividuals; i++) {
+        duringWeekAttendance.push({individual: i, daysRemaining: nAttendanceDuringWeek, days: []});
+        weekendAttendance.push({individual: i, daysRemaining: nAttendanceOnWeekends, days: []});
+    }
+
+    duringWeekAttendance = shuffle(duringWeekAttendance);
+    weekendAttendance = shuffle(weekendAttendance);
+
+    var daysInMonth = [];
+
+    for (i = 0; i < nDaysInMonth; i++) {
+        var date = new Date(year, month - 1, 1 + i);
+        if (date.getDay() == 0 || date.getDay() == 6) {
+            var dayInMonth = {day:(i+1), isWeekend:true, individuals:[]};
+            daysInMonth.push(dayInMonth);
+        }
+        else {
+            var dayInMonth = {day:(i+1), isWeekend:false, individuals:[]}
+            daysInMonth.push(dayInMonth);
+        }
+    }
+
+    daysInMonth = shuffle(daysInMonth);
+
+    var nWeekendDaysRemaining = nWeekends;
+    var nScalesRemainingWeekendDays = nIndividuals * nAttendanceOnWeekends;
+
+    var nOnWeekDaysRemaining = nNormalDays;
+    var nScalesRemainingOnWeekDays = nIndividuals * nAttendanceDuringWeek;
+
+    for (i = 0; i < nDaysInMonth; i++) {
+        if (daysInMonth[i].isWeekend) {
+            var nIndividualsInDay = Math.ceil(nScalesRemainingWeekendDays / nWeekendDaysRemaining);
+
+            console.log("weekeend!");
+            console.log("nScalesRemainingWeekendDays: " + nScalesRemainingWeekendDays);
+            console.log("nWeekendDaysRemaining: " + nWeekendDaysRemaining);
+            console.log("nIndividualsInDay: " + nIndividualsInDay);
+
+            weekendAttendance.sort(compare);
+            console.log(weekendAttendance);
+
+            for(j = 0; j < nIndividualsInDay && j < nIndividuals; j++){
+                daysInMonth[i].individuals.push(weekendAttendance[j].individual);
+                weekendAttendance[j].daysRemaining--;
+                var date = new Date(year, month - 1, daysInMonth[i].day);
+                weekendAttendance[j].days.push(daysInMonth[i].day + "/" + month + " (" + getWeekDayName(date) + ")");
+            }
+
+            nWeekendDaysRemaining--;
+            nScalesRemainingWeekendDays -= nIndividualsInDay;
+        }
+        else {
+            var nIndividualsInDay = Math.ceil(nScalesRemainingOnWeekDays / nOnWeekDaysRemaining);
+
+            console.log("normal day!");
+            console.log("nScalesRemainingOnWeekDays: " + nScalesRemainingOnWeekDays);
+            console.log("nOnWeekDaysRemaining: " + nOnWeekDaysRemaining);
+            console.log("nIndividualsInDay: " + nIndividualsInDay);
+
+            duringWeekAttendance.sort(compare);
+            console.log(duringWeekAttendance);
+
+            for(j = 0; j < nIndividualsInDay && j < nIndividuals; j++){
+                daysInMonth[i].individuals.push(duringWeekAttendance[j].individual);
+                duringWeekAttendance[j].daysRemaining--;
+                var date = new Date(year, month - 1, daysInMonth[i].day);
+                duringWeekAttendance[j].days.push(daysInMonth[i].day + "/" + month + " (" + getWeekDayName(date) + ")");
+            }
+
+            nOnWeekDaysRemaining--;
+            nScalesRemainingOnWeekDays -= nIndividualsInDay;
+        }
+        // console.log(daysInMonth);
+    }
+
+    daysInMonth.sort(compareByDayAsc);
+    
+    for (i = 0; i < nDaysInMonth; i++) {
+        var date = new Date(year, month - 1, 1 + i);
+        ws.cell(4 + nIndividuals + i, 1).string((i + 1) + "/" + month + " (" + getWeekDayName(date) + ")");
+        var scale = ""
+        for(j = 0; j < daysInMonth[i].individuals.length; j++){
+            scale += designation + " " + daysInMonth[i].individuals[j] + ", ";
+        }
+        ws.cell(4 + nIndividuals + i, 2).string(scale);
+    }
+
+    weekendAttendance.sort(compareByIndividualAsc);
+    duringWeekAttendance.sort(compareByIndividualAsc);
+
+    for(i = 0; i < nIndividuals; i++){
+        var weekeendDays = "Finais de semana: "
+        var inWeekDays = "Dias de semana: "
+        for(j = 0; j < weekendAttendance[i].days.length; j++){
+            weekeendDays += weekendAttendance[i].days[j] + ", "
+        }
+        for(j = 0; j < duringWeekAttendance[i].days.length; j++){
+            inWeekDays += duringWeekAttendance[i].days[j] + ", "
+        }
+        ws.cell(2+i, 2).string(inWeekDays + "\n" + weekeendDays);
+    }
+
+    wb.write(name);
+    res.redirect("/download");
 });
+
+app.get("/download", function (req, res) {
+    res.download(name);
+});
+
+function compare(a, b) {
+    if (a.daysRemaining < b.daysRemaining)
+        return 1;
+    else if(a.daysRemaining > b.daysRemaining)
+        return -1;
+    return 0;
+}
+
+function compareByDayAsc(a, b){
+    if (a.day > b.day)
+        return 1;
+    else if(a.day < b.day)
+        return -1;
+    return 0;
+}
+
+function compareByIndividualAsc(a, b){
+    if (a.individual > b.individual)
+        return 1;
+    else if(a.individual < b.individual)
+        return -1;
+    return 0;
+}
+
+function shuffle(array) {
+    var currentIndex = array.length, temporaryValue, randomIndex;
+
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+}
+
+
+function getWeekDayName(date) {
+    return weekDayNames[date.getDay()];
+}
+
+function getDaysInMonth(month, year) {
+    var date = new Date(year, month, 0);
+    var nDaysInMonth = date.getDate();
+    console.log("daysInMonth call");
+    console.log("date = " + date);
+    console.log("nDaysInMonth = " + nDaysInMonth);
+    return nDaysInMonth;
+}
