@@ -45,9 +45,14 @@ app.get("/generate", function (req, res) {
     ws.cell(1, 2).string("Dias em que foi escalado");
     ws.cell(1, 3).string("Informações adicionais");
 
+    console.log("A");
+
     for (i = 0; i < nIndividuals; i++) {
-        ws.cell(2 + i, 1).string(designation + " " + (i + 1));
+        console.log("i = " + i);
+        ws.cell(2 + i, 1).string(designation + " " + minDigits(i + 1, 3));
     }
+
+    console.log("B");
 
     var nDaysInMonth = getDaysInMonth(month, year);
 
@@ -122,7 +127,7 @@ app.get("/generate", function (req, res) {
                 daysInMonth[i].individuals.push(weekendAttendance[j].individual);
                 weekendAttendance[j].daysRemaining--;
                 var date = new Date(year, month - 1, daysInMonth[i].day);
-                weekendAttendance[j].days.push(daysInMonth[i].day + "/" + month + " (" + getWeekDayName(date) + ")");
+                weekendAttendance[j].days.push(minDigits(daysInMonth[i].day, 2) + "/" + minDigits(month, 2) + " (" + getWeekDayName(date) + ")");
             }
 
             nWeekendDaysRemaining--;
@@ -143,7 +148,7 @@ app.get("/generate", function (req, res) {
                 daysInMonth[i].individuals.push(duringWeekAttendance[j].individual);
                 duringWeekAttendance[j].daysRemaining--;
                 var date = new Date(year, month - 1, daysInMonth[i].day);
-                duringWeekAttendance[j].days.push(daysInMonth[i].day + "/" + month + " (" + getWeekDayName(date) + ")");
+                duringWeekAttendance[j].days.push(minDigits(daysInMonth[i].day, 2) + "/" + minDigits(month, 2) + " (" + getWeekDayName(date) + ")");
             }
 
             nOnWeekDaysRemaining--;
@@ -156,10 +161,15 @@ app.get("/generate", function (req, res) {
     
     for (i = 0; i < nDaysInMonth; i++) {
         var date = new Date(year, month - 1, 1 + i);
-        ws.cell(4 + nIndividuals + i, 1).string((i + 1) + "/" + month + " (" + getWeekDayName(date) + ")");
-        var scale = ""
+        ws.cell(4 + nIndividuals + i, 1).string(minDigits(i+1,2) + "/" + minDigits(month, 2) + " (" + getWeekDayName(date) + ")");
+        var scale = "";
+        console.log("antes do sort:");
+        console.log(daysInMonth[i].individuals);
+        daysInMonth[i].individuals.sort(normalNumberCompare);
+        console.log("depois do sort:");
+        console.log(daysInMonth[i].individuals);
         for(j = 0; j < daysInMonth[i].individuals.length; j++){
-            scale += designation + " " + daysInMonth[i].individuals[j] + ", ";
+            scale += designation + " " + minDigits(daysInMonth[i].individuals[j], 3) + ", ";
         }
         ws.cell(4 + nIndividuals + i, 2).string(scale);
     }
@@ -170,6 +180,10 @@ app.get("/generate", function (req, res) {
     for(i = 0; i < nIndividuals; i++){
         var weekeendDays = "Finais de semana: "
         var inWeekDays = "Dias de semana: "
+
+        weekendAttendance[i].days.sort();
+        duringWeekAttendance[i].days.sort();
+
         for(j = 0; j < weekendAttendance[i].days.length; j++){
             weekeendDays += weekendAttendance[i].days[j] + ", "
         }
@@ -179,6 +193,14 @@ app.get("/generate", function (req, res) {
         ws.cell(2+i, 2).string(inWeekDays + "\n" + weekeendDays);
     }
 
+    ws.column(1).setWidth(30);
+    ws.column(2).setWidth(120);
+    ws.column(3).setWidth(30);
+
+    for(i = 2; i < 2+nIndividuals; i++){
+        ws.row(i).setHeight(32);
+    }
+
     wb.write(name);
     res.redirect("/download");
 });
@@ -186,6 +208,23 @@ app.get("/generate", function (req, res) {
 app.get("/download", function (req, res) {
     res.download(name);
 });
+
+function minDigits(a, minLength){
+    var s = a.toString();
+    var zeros = "";
+    for(remainingZerosXYZ = 0; remainingZerosXYZ < minLength-s.length; remainingZerosXYZ++){
+        zeros += '0';
+    }
+    return (zeros+s);
+}
+
+function normalNumberCompare(a, b){
+    if (a < b)
+        return -1;
+    else if(a > b)
+        return 1;
+    return 0;
+}
 
 function compare(a, b) {
     if (a.daysRemaining < b.daysRemaining)
@@ -229,7 +268,6 @@ function shuffle(array) {
 
     return array;
 }
-
 
 function getWeekDayName(date) {
     return weekDayNames[date.getDay()];
